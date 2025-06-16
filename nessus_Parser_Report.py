@@ -132,7 +132,10 @@ def extract_vulnerabilities_for_compare(report_hosts):
     """Helper for comparison mode."""
     vulns = {}
     for host in report_hosts:
-        host_ip = host.find('HostProperties/tag[@name="host-ip"]').text
+        host_ip_elem = host.find('HostProperties/tag[@name="host-ip"]')
+        if host_ip_elem is None:
+            continue
+        host_ip = host_ip_elem.text
         for item in host.findall('ReportItem'):
             if int(item.get('severity')) > 0: # Only compare actual vulnerabilities
                 plugin_id = item.get('pluginID')
@@ -358,8 +361,8 @@ def create_comparison_sheets(wb, previous_file, current_file):
     new_vulns.sort(key=lambda x: (-x['severity'], x['host_ip']))
     
     # --- New Vulns Sheet ---
-    ws_new = wb.active
-    ws_new.title = "New Vulnerabilities"
+    # **FIX APPLIED HERE**
+    ws_new = wb.create_sheet("New Vulnerabilities", 0)
     headers = ["Host IP", "Severity", "Plugin Name", "Plugin ID", "Port", "Protocol"]
     widths = [15, 10, 50, 12, 8, 8]
     set_headers_and_widths(ws_new, headers, widths)
